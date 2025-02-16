@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/base64"
-	"fmt"
 	"log"
 	"os"
 
@@ -10,9 +9,10 @@ import (
 )
 
 func main() {
-
+	// Set Vault address and token from environment variables
 	vaultAddr := os.Getenv("VAULT_ADDR")
 	token := os.Getenv("VAULT_TOKEN")
+
 	// Vault client configuration
 	config := api.DefaultConfig()
 	config.Address = vaultAddr
@@ -37,6 +37,31 @@ func main() {
 	certificate := secret.Data["certificate"].(string)
 	privateKey := secret.Data["private_key"].(string)
 
+	// Save the certificate to a file
+	certFile, err := os.Create("certificate.pem")
+	if err != nil {
+		log.Fatalf("Failed to create certificate file: %v", err)
+	}
+	defer certFile.Close()
+
+	_, err = certFile.WriteString(certificate)
+	if err != nil {
+		log.Fatalf("Failed to write certificate to file: %v", err)
+	}
+
+	// Save the issuing CA certificate (public key) to a file
+	issuingCA := secret.Data["issuing_ca"].(string)
+	caFile, err := os.Create("issuing_ca.pem")
+	if err != nil {
+		log.Fatalf("Failed to create issuing CA file: %v", err)
+	}
+	defer caFile.Close()
+
+	_, err = caFile.WriteString(issuingCA)
+	if err != nil {
+		log.Fatalf("Failed to write issuing CA to file: %v", err)
+	}
+
 	// Store the private key in the Transit Engine
 	encodedPrivateKey := base64.StdEncoding.EncodeToString([]byte(privateKey))
 	_, err = client.Logical().Write("transit/keys/code-signing-key", map[string]interface{}{
@@ -47,7 +72,6 @@ func main() {
 		log.Fatalf("Failed to store private key in Transit Engine: %v", err)
 	}
 
-	// Return the public key
-	fmt.Println("Certificate:\n", certificate)
-	fmt.Println("Public Key (for verification):\n", secret.Data["issuing_ca"].(string))
+	log.Println("Certificate saved to certificate.pem")
+	log.Println("Issuing CA (public key) saved to issuing_ca.pem")
 }

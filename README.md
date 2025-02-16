@@ -1,6 +1,6 @@
 # Code Signing with HashiCorp Vault
 
-This repository demonstrates how to use **HashiCorp Vault's PKI and Transit engines** to securely manage code signing certificates and perform signing operations without exposing private keys.
+Demonstrate how to use **HashiCorp Vault's PKI and Transit engines** to securely manage code signing certificates and perform signing operations without exposing private keys.
 
 ## **Features**
 - Issue code-signing certificates using Vault's PKI engine.
